@@ -1,0 +1,119 @@
+{
+  "timestamp": "2026-09-04 22:10:10",
+  "hardware": {
+    "gpu_available": true,
+    "device_name": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "architecture": "sm_89 (Ada Lovelace)",
+    "cuda_cores": 4608,
+    "sm_count": 36,
+    "vram_total_gb": 8.0,
+    "vram_free_gb": 6.9,
+    "vram_total_bytes": 8585216000,
+    "vram_free_bytes": 7411335168
+  },
+  "capacity": {
+    "usable_vram_gb": 6.8,
+    "max_non_zeros_nnz": 364871680,
+    "max_variables_sparse": 1208092,
+    "max_constraints_sparse": 604046,
+    "max_variables_dense": 42712,
+    "max_constraints_dense": 21356,
+    "scalability_multiplier": 28.3,
+    "explanation": "On an 8GB RTX 4070, uncompressed dense solvers crash at ~42,712 variables (~21,356 constraints). Our CSR sparse architecture scales up to ~1,208,092 variables (~604,046 constraints and 364,871,680 non-zeros), a 28.3x scalability expansion."
+  },
+  "stress_test": [
+    {
+      "n_vars": 1000,
+      "n_constraints": 500,
+      "nnz": 25000,
+      "dense_equivalent_mb": 3.88,
+      "actual_gpu_vram_mb": 0.42,
+      "savings_ratio": 9.2,
+      "solve_time_sec": 0.213,
+      "iterations_per_sec": 704.2,
+      "memory_leak_mb": 0.0,
+      "status": "iteration_limit"
+    },
+    {
+      "n_vars": 5000,
+      "n_constraints": 2500,
+      "nnz": 625000,
+      "dense_equivalent_mb": 95.67,
+      "actual_gpu_vram_mb": 7.83,
+      "savings_ratio": 12.2,
+      "solve_time_sec": 0.2551,
+      "iterations_per_sec": 587.9,
+      "memory_leak_mb": 0.0,
+      "status": "iteration_limit"
+    },
+    {
+      "n_vars": 10000,
+      "n_constraints": 5000,
+      "nnz": 2500000,
+      "dense_equivalent_mb": 382.08,
+      "actual_gpu_vram_mb": 29.94,
+      "savings_ratio": 12.8,
+      "solve_time_sec": 0.8223,
+      "iterations_per_sec": 182.4,
+      "memory_leak_mb": 0.0,
+      "status": "iteration_limit"
+    },
+    {
+      "n_vars": 25000,
+      "n_constraints": 12500,
+      "nnz": 15625000,
+      "dense_equivalent_mb": 2385.71,
+      "actual_gpu_vram_mb": 182.18,
+      "savings_ratio": 13.1,
+      "solve_time_sec": 5.4691,
+      "iterations_per_sec": 27.4,
+      "memory_leak_mb": 0.0,
+      "status": "iteration_limit"
+    }
+  ],
+  "scaling_test": [
+    {
+      "n_vars": 100,
+      "n_cons": 50,
+      "cpu_time": 0.0107,
+      "gpu_time": 0.1166,
+      "speedup": 0.09
+    },
+    {
+      "n_vars": 300,
+      "n_cons": 150,
+      "cpu_time": 0.0153,
+      "gpu_time": 0.1196,
+      "speedup": 0.13
+    },
+    {
+      "n_vars": 500,
+      "n_cons": 250,
+      "cpu_time": 0.0176,
+      "gpu_time": 0.1223,
+      "speedup": 0.14
+    },
+    {
+      "n_vars": 1000,
+      "n_cons": 500,
+      "cpu_time": 0.032,
+      "gpu_time": 0.1277,
+      "speedup": 0.25
+    },
+    {
+      "n_vars": 5000,
+      "n_cons": 2500,
+      "cpu_time": 0.597,
+      "gpu_time": 0.409,
+      "speedup": 1.46
+    },
+    {
+      "n_vars": 10000,
+      "n_cons": 5000,
+      "cpu_time": 2.8934,
+      "gpu_time": 0.9144,
+      "speedup": 3.16
+    }
+  ],
+  "crossover_point": 5000
+}

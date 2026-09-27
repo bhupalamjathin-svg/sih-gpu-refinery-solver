@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDHG-GPU | Indigenous CUDA LP Solver — SIH26119</title>
+    <meta name="description" content="GPU-accelerated Linear Programming solver using PDHG method for refinery optimization. Built for Smart India Hackathon 2026.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css?v=2.9">
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="url(#logo-grad)"/>
+                        <path d="M8 16L14 10L20 16L14 22Z" fill="white" opacity="0.9"/>
+                        <path d="M14 16L20 10L26 16L20 22Z" fill="white" opacity="0.6"/>
+                        <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="32" y2="32">
+                            <stop stop-color="#06b6d4"/><stop offset="1" stop-color="#10b981"/>
+                        </linearGradient></defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="logo-title">PDHG-GPU Solver</h1>
+                    <span class="logo-subtitle">SIH26119 — Indigenous CUDA Optimization Engine</span>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="badge badge-gpu" id="gpu-badge">
+                    <span class="badge-dot"></span>
+                    Checking GPU...
+                </span>
+                <span class="badge badge-algo">LP + QP + MILP (CUDA)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Live GPU Hardware Telemetry Bar -->
+        <div class="gpu-telemetry-banner" id="gpu-telemetry-banner">
+            <div class="telemetry-item telemetry-gpu">
+                <div class="telemetry-icon-pulse">
+                    <span class="pulse-dot"></span>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+                </div>
+                <div>
+                    <div class="telemetry-title" id="telem-gpu-name">NVIDIA GeForce RTX 4070 Laptop GPU</div>
+                    <div class="telemetry-sub" id="telem-gpu-arch">Ada Lovelace (sm_89) • 4,608 CUDA Cores (36 SMs)</div>
+                </div>
+            </div>
+
+            <div class="telemetry-item telemetry-vram">
+                <div class="telemetry-vram-header">
+                    <span>Dedicated VRAM</span>
+                    <span class="telemetry-vram-val" id="telem-vram-text">1.09 / 8.00 GB (13.7%)</span>
+                </div>
+                <div class="telemetry-progress-bar">
+                    <div class="telemetry-progress-fill" id="telem-vram-bar" style="width: 13.7%;"></div>
+                </div>
+            </div>
+
+            <div class="telemetry-stats">
+                <div class="telem-stat">
+                    <span class="telem-stat-label">TEMP</span>
+                    <span class="telem-stat-val" id="telem-temp">--°C</span>
+                </div>
+                <div class="telem-stat">
+                    <span class="telem-stat-label">GPU UTIL</span>
+                    <span class="telem-stat-val" id="telem-util">--%</span>
+                </div>
+                <div class="telem-stat">
+                    <span class="telem-stat-label">POWER</span>
+                    <span class="telem-stat-val" id="telem-power">-- W</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="presets" id="tab-presets">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Refinery Presets
+            </button>
+            <button class="tab-btn" data-tab="custom" id="tab-custom">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Custom LP
+            </button>
+            <button class="tab-btn" data-tab="benchmark" id="tab-benchmark">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                Benchmarks
+            </button>
+            <button class="tab-btn" data-tab="mps" id="tab-mps">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload .MPS
+            </button>
+            <button class="tab-btn" data-tab="about" id="tab-about">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                About
+            </button>
+        </nav>
+
+        <!-- Tab: Refinery Presets -->
+        <section class="tab-content active" id="content-presets">
+            <div class="section-header">
+                <h2>Refinery Optimization Presets</h2>
+                <p>Select a real-world refinery LP problem to solve using the GPU-accelerated PDHG method.</p>
+            </div>
+            <div class="preset-grid" id="preset-grid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Solver Settings -->
+            <div class="settings-bar">
+                <div class="setting-group">
+                    <label>Tolerance</label>
+                    <select id="preset-tol">
+                        <option value="1e-3">1e-3 (Fast)</option>
+                        <option value="1e-4" selected>1e-4 (Standard)</option>
+                        <option value="1e-6">1e-6 (High Precision)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Max Iterations</label>
+                    <input type="number" id="preset-maxiter" value="10000" min="100" max="100000">
+                </div>
+                <div class="setting-group">
+                    <label>Device</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-device="gpu" id="toggle-gpu">GPU</button>
+                        <button class="toggle-btn" data-device="cpu" id="toggle-cpu">CPU</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="results-panel" id="preset-results" style="display:none;">
+                <div class="results-header">
+                    <h3 id="result-title">Solution</h3>
+                    <div class="result-badges">
+                        <span class="badge" id="result-status"></span>
+                        <span class="badge" id="result-time"></span>
+                        <span class="badge" id="result-device"></span>
+                    </div>
+                </div>
+                <div class="results-grid">
+                    <div class="result-card" id="card-objective">
+                        <div class="result-card-label">Optimal Objective</div>
+                        <div class="result-card-value" id="result-obj">—</div>
+                    </div>
+                    <div class="result-card" id="card-iterations">
+                        <div class="result-card-label">Iterations</div>
+                        <div class="result-card-value" id="result-iter">—</div>
+                    </div>
+                    <div class="result-card" id="card-primal-res">
+                        <div class="result-card-label">Primal Residual</div>
+                        <div class="result-card-value" id="result-pres">—</div>
+                    </div>
+                    <div class="result-card" id="card-dual-res">
+                        <div class="result-card-label">Dual Residual</div>
+                        <div class="result-card-value" id="result-dres">—</div>
+                    </div>
+                </div>
+
+                <!-- Convergence Chart -->
+                <div class="chart-container">
+                    <h4>Convergence Plot</h4>
+                    <canvas id="convergence-chart"></canvas>
+                </div>
+
+                <!-- Solution Variables -->
+                <div class="solution-table-wrapper">
+                    <h4>Decision Variables (Top 20)</h4>
+                    <div class="table-scroll">
+                        <table class="solution-table" id="solution-table">
+                            <thead><tr><th>Variable</th><th>Value</th><th>Allocation</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Custom LP -->
+        <section class="tab-content" id="content-custom">
+            <div class="section-header">
+                <h2>Custom LP Input</h2>
+                <p>Enter your own linear program. Format: minimize c<sup>T</sup>x subject to Ax ≤ b, x ≥ 0.</p>
+            </div>
+            <div class="custom-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Objective coefficients <code>c</code> <span class="hint">(comma-separated)</span></label>
+                        <input type="text" id="custom-c" placeholder="e.g. -5, -4, -3" value="-5, -4, -3">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-group-wide">
+                        <label>Constraint matrix <code>A</code> <span class="hint">(rows separated by semicolons)</span></label>
+                        <textarea id="custom-A" rows="4" placeholder="e.g. 6,4,2; 1,1.5,3; 0,1,1">6, 4, 2; 1, 1.5, 3; 0, 1, 1</textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>RHS vector <code>b</code> <span class="hint">(comma-separated)</span></label>
+                        <input type="text" id="custom-b" placeholder="e.g. 240, 150, 60" value="240, 150, 60">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Upper bounds <span class="hint">(optional, comma-separated)</span></label>
+                        <input type="text" id="custom-ub" placeholder="Leave empty for no upper bounds">
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btn-solve-custom" onclick="solveCustom()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Solve LP
+                </button>
+            </div>
+
+            <div class="results-panel" id="custom-results" style="display:none;">
+                <div class="results-header">
+                    <h3>Custom LP Solution</h3>
+                    <div class="result-badges">
+                        <span class="badge" id="custom-status"></span>
+                        <span class="badge" id="custom-time-badge"></span>
+                    </div>
+                </div>
+                <div class="results-grid">
+                    <div class="result-card">
+                        <div class="result-card-label">Optimal Objective</div>
+                        <div class="result-card-value" id="custom-obj">—</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-card-label">Iterations</div>
+                        <div class="result-card-value" id="custom-iter">—</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-card-label">Primal Residual</div>
+                        <div class="result-card-value" id="custom-pres">—</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-card-label">Duality Gap</div>
+                        <div class="result-card-value" id="custom-gap">—</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h4>Convergence Plot</h4>
+                    <canvas id="custom-convergence-chart"></canvas>
+                </div>
+                <div class="solution-table-wrapper">
+                    <h4>Solution Vector</h4>
+                    <div class="table-scroll">
+                        <table class="solution-table" id="custom-solution-table">
+                            <thead><tr><th>Variable</th><th>Value</th><th>Allocation</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Benchmarks -->
+        <section class="tab-content" id="content-benchmark">
+            <div class="section-header">
+                <h2>GPU vs CPU Performance Benchmarks</h2>
+                <p>Compare PDHG solver performance across GPU (CuPy), CPU (NumPy), and SciPy HiGHS baseline.</p>
+            </div>
+
+            <div class="benchmark-controls">
+                <button class="btn btn-primary" id="btn-run-benchmark" onclick="runBenchmark()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Run Scaling Benchmark
+                </button>
+                <button class="btn btn-secondary" id="btn-benchmark-preset" onclick="runPresetBenchmark()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+                    Benchmark Refinery Preset
+                </button>
+                <select id="benchmark-preset-select">
+                    <option value="iocl_bs6_refinery" selected>IOCL Mathura 8-Crude Distillation & BS-VI Blending</option>
+                    <option value="haverly_pooling">Haverly Petroleum Pooling Benchmark (1978)</option>
+                    <option value="netlib_afiro">Netlib AFIRO (Standard Real-World MPS)</option>
+                    <option value="mega_refinery_5k">MRPL Mega-Complex (5,000 vars - LP)</option>
+                    <option value="national_grid_8k">National Pipeline Grid (8,000 vars - LP)</option>
+                    <option value="scheduling_multiunit">Multi-Unit Scheduling (2,160 vars - LP)</option>
+                    <option value="blending_industrial">Stream Blending (1,000 vars - LP)</option>
+                    <option value="qp_crude_risk">Crude Procurement Risk (QP - 8 crudes)</option>
+                    <option value="milp_unit_commitment">Refinery Unit Commitment (MILP - 36 vars)</option>
+                    <option value="blending_pilot">Single Unit Blending (12 vars baseline)</option>
+                </select>
+            </div>
+
+            <div id="benchmark-loading" class="loading-indicator" style="display:none;">
+                <div class="spinner"></div>
+                <p>Running benchmarks... This may take a minute.</p>
+            </div>
+
+            <div id="benchmark-results" style="display:none;">
+                <div class="chart-row">
+                    <div class="chart-container chart-half">
+                        <h4>Solve Time Comparison</h4>
+                        <canvas id="benchmark-time-chart"></canvas>
+                    </div>
+                    <div class="chart-container chart-half">
+                        <h4>GPU Speedup vs CPU</h4>
+                        <canvas id="benchmark-speedup-chart"></canvas>
+                    </div>
+                </div>
+                <div class="solution-table-wrapper">
+                    <h4>Detailed Results</h4>
+                    <div class="table-scroll">
+                        <table class="solution-table" id="benchmark-table">
+                            <thead>
+                                <tr>
+                                    <th>Problem Size</th>
+                                    <th>CPU Time (s)</th>
+                                    <th>GPU Time (s)</th>
+                                    <th>SciPy Time (s)</th>
+                                    <th>GPU Speedup</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preset benchmark result -->
+            <div id="preset-benchmark-results" style="display:none;">
+                <div class="chart-container">
+                    <h4 id="preset-bench-title">Preset Benchmark</h4>
+                    <canvas id="preset-bench-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- GPU Memory Architecture & Stress Profiler Card -->
+            <div class="memory-profiler-card" id="memory-profiler-section">
+                <div class="memory-profiler-header">
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 10px;">
+                            <span class="badge badge-optimal">VRAM TELEMETRY</span>
+                            GPU Memory Architecture & Scalability Limits (RTX 4070 8GB)
+                        </h3>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+                            Empirical memory footprint comparison between Dense representation and Indigenous Sparse Compressed Row Storage (CSR).
+                        </p>
+                    </div>
+                    <button class="btn btn-primary" id="btn-run-memory-stress" onclick="runMemoryStressTest()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        Run Live Memory Stress Test
+                    </button>
+                </div>
+
+                <!-- Metric Cards -->
+                <div class="memory-metrics-grid">
+                    <div class="memory-metric-box">
+                        <div class="memory-metric-title">Max Non-Zeros (NNZ)</div>
+                        <div class="memory-metric-val" id="mem-max-nnz">~364 Million</div>
+                        <div class="memory-metric-sub">Theoretical capacity on 8GB GDDR6</div>
+                    </div>
+                    <div class="memory-metric-box optimal">
+                        <div class="memory-metric-title">Max Decision Variables</div>
+                        <div class="memory-metric-val" id="mem-max-vars">~1,208,000</div>
+                        <div class="memory-metric-sub">Sparse CSR architecture limit</div>
+                    </div>
+                    <div class="memory-metric-box alert">
+                        <div class="memory-metric-title">Dense Solver Crash Limit</div>
+                        <div class="memory-metric-val" id="mem-dense-limit">~42,700 vars</div>
+                        <div class="memory-metric-sub">Dense matrices crash at >8 GB VRAM</div>
+                    </div>
+                    <div class="memory-metric-box optimal">
+                        <div class="memory-metric-title">Memory Scalability Factor</div>
+                        <div class="memory-metric-val" id="mem-scalability">28.3x Larger</div>
+                        <div class="memory-metric-sub">Sparse CSR compression advantage</div>
+                    </div>
+                </div>
+
+                <div id="memory-stress-loading" class="loading-indicator" style="display:none;">
+                    <div class="spinner"></div>
+                    <p>Executing GPU memory stress tests (1k to 25k variables) on RTX 4070...</p>
+                </div>
+
+                <!-- Stress Results Table -->
+                <div class="memory-table-wrapper" id="memory-stress-table-wrapper" style="display:none;">
+                    <table class="solution-table">
+                        <thead>
+                            <tr>
+                                <th>Problem Scale (N x M)</th>
+                                <th>Non-Zeros (NNZ)</th>
+                                <th>Dense Equivalent RAM</th>
+                                <th>Actual GPU VRAM</th>
+                                <th>Memory Compression</th>
+                                <th>Solve Time</th>
+                                <th>Memory Leak Check</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memory-stress-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+ 
+         <!-- Tab: Upload & Benchmark .MPS -->
+         <section class="tab-content" id="content-mps">
+             <div class="section-header">
+                 <h2>Real-World .MPS File Upload & Benchmarking</h2>
+                 <p>Upload any standard Mathematical Programming System (.mps) file or run bundled Netlib & Refinery benchmarks directly on the RTX 4070 GPU.</p>
+             </div>
+ 
+             <div class="mps-controls-card">
+                 <div class="mps-presets-bar">
+                     <span class="mps-presets-label">⚡ Standard Benchmarks:</span>
+                     <button class="btn btn-secondary mps-quick-btn" onclick="loadBundledMps('afiro.mps')">AFIRO (Netlib Standard)</button>
+                     <button class="btn btn-secondary mps-quick-btn" onclick="loadBundledMps('haverly.mps')">Haverly Pooling (1978)</button>
+                     <button class="btn btn-secondary mps-quick-btn" onclick="loadBundledMps('iocl_refinery.mps')">IOCL Mathura Complex</button>
+                 </div>
+ 
+                 <div class="mps-dropzone" id="mps-dropzone" onclick="document.getElementById('mps-file-input').click()">
+                     <div class="dropzone-icon">
+                         <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                     </div>
+                     <div class="dropzone-text">
+                         <strong>Drag & drop any .mps file here</strong>, or <span class="dropzone-browse">browse files</span>
+                     </div>
+                     <span class="dropzone-hint">100% indigenous parser converts problem into GPU sparse representation</span>
+                     <input type="file" id="mps-file-input" accept=".mps,.lp" style="display:none;" onchange="handleMpsFileUpload(event)">
+                 </div>
+ 
+                 <div style="display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap;">
+                    <a href="/download/sample-afiro-mps" class="btn btn-secondary mps-quick-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-size:0.78rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download sample_afiro.mps
+                    </a>
+                    <a href="/download/sample-iocl-mps" class="btn btn-secondary mps-quick-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-size:0.78rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download iocl_refinery.mps
+                    </a>
+                </div>
+
+                <div class="mps-file-status" id="mps-file-status" style="display:none;">
+                     <div class="mps-file-info">
+                         <div class="mps-file-title" id="mps-file-name">AFIRO.mps</div>
+                         <div class="mps-file-meta" id="mps-file-meta">32 Variables • 27 Constraints • LP Standard Form</div>
+                     </div>
+                     <button class="btn btn-primary" id="btn-solve-mps" onclick="solveMpsCurrent()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Solve on RTX 4070 GPU
+                    </button>
+                </div>
+            </div>
+
+            <div class="results-panel" id="mps-results" style="display:none;">
+                <!-- Populated dynamically by renderResults -->
+            </div>
+        </section>
+
+        <!-- Tab: About -->
+        <section class="tab-content" id="content-about">
+            <div class="about-content">
+                <!-- Hero Header -->
+                <div class="about-hero">
+                    <div class="hero-badge">Smart India Hackathon 2026 &bull; Problem Statement SIH26119</div>
+                    <h2 style="text-align:center; justify-content:center; margin-left:auto; margin-right:auto;">PDHG-GPU: Indigenous CUDA Optimization Engine</h2>
+                    <p class="about-tagline">
+                        A sovereign, high-throughput GPU mathematical solver built from ground-up mathematical foundations.
+                        Designed to liberate Indian refineries (IOCL, BPCL, HPCL, MRPL) and critical infrastructure from costly foreign optimization software (Gurobi, CPLEX, FICO Xpress).
+                    </p>
+                    <div class="hero-stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; max-width:880px; margin:1.5rem auto 1.75rem auto; width:100%;">
+                        <div class="hero-stat-box">
+                            <span class="stat-num">4,608</span>
+                            <span class="stat-lbl">CUDA Cores (Ada Lovelace)</span>
+                        </div>
+                        <div class="hero-stat-box">
+                            <span class="stat-num">364M</span>
+                            <span class="stat-lbl">Max NNZ in 8GB VRAM</span>
+                        </div>
+                        <div class="hero-stat-box">
+                            <span class="stat-num">0%</span>
+                            <span class="stat-lbl">Foreign Solver Dependency</span>
+                        </div>
+                        <div class="hero-stat-box">
+                            <span class="stat-num">&lt; 10 ppm</span>
+                            <span class="stat-lbl">BS-VI Clean Fuel Compliance</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; justify-content:center; margin-top:1.5rem; flex-wrap:wrap;">
+                        <a href="/download/presentation-pptx" class="btn btn-primary" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:0.85rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download Presentation Deck (.pptx)
+                        </a>
+                        <a href="/download/presentation-pdf" class="btn btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:0.85rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Download Deck (.pdf)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Compliance Matrix Table -->
+                <div class="about-section">
+                    <div class="section-header">
+                        <h3>🇮🇳 SIH 26119 Mandate Compliance &amp; Innovation Matrix</h3>
+                        <p class="section-sub">Direct comparison against conventional proprietary legacy solvers.</p>
+                    </div>
+                    <div class="table-container" style="margin-top: 1rem;">
+                        <table class="compliance-table">
+                            <thead>
+                                <tr>
+                                    <th>Evaluation Criterion</th>
+                                    <th>Foreign Proprietary (Gurobi / CPLEX)</th>
+                                    <th>Indigenous PDHG-GPU Engine</th>
+                                    <th>Compliance Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Mathematical Independence</strong></td>
+                                    <td>Closed-source C++ binaries ($20k+/yr license per core; export controlled)</td>
+                                    <td><strong>100% Indigenous from first principles:</strong> Chambolle-Pock PDHG, Ruiz equi-scaling, KKT dual multipliers derived from scratch.</td>
+                                    <td><span class="compliance-badge-pass">✓ 100% COMPLIANT</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Optimization Classes</strong></td>
+                                    <td>Simplex, Interior-Point, Mixed-Integer Simplex</td>
+                                    <td><strong>Tri-Class Suite:</strong> High-scale LP (PDHG First-Order), Convex QP (Proximal PDHG), and MILP (GPU-accelerated Branch-and-Bound).</td>
+                                    <td><span class="compliance-badge-pass">✓ 100% COMPLIANT</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>GPU Hardware Acceleration</strong></td>
+                                    <td>Primarily CPU-bound; limited GPU acceleration for barrier/Cholesky only</td>
+                                    <td><strong>Native CUDA GPU:</strong> Entire inner loop executes in GPU memory via CuPy Sparse SpMV kernels. Zero host-device synchronization per step.</td>
+                                    <td><span class="compliance-badge-pass">✓ 100% COMPLIANT</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Memory Footprint</strong></td>
+                                    <td>O(N²) dense Cholesky factor storage causes memory exhaustion on large models</td>
+                                    <td><strong>Sparse CSR Matrix Representation:</strong> Memory scales strictly with non-zeros O(NNZ), enabling 364M non-zeros on commodity 8GB GPUs.</td>
+                                    <td><span class="compliance-badge-pass">✓ 100% COMPLIANT</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Indian Refining Digital Twin</strong></td>
+                                    <td>Generic optimization; requires custom mathematical formulation by end-users</td>
+                                    <td><strong>Turnkey Indian Assay:</strong> IOCL Mathura 8-crude topology, BS-VI fuel specs (RON 91+, &lt;10 ppm S), and marginal shadow price debottlenecking.</td>
+                                    <td><span class="compliance-badge-pass">✓ 100% COMPLIANT</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 5-Stage System Architecture Pipeline -->
+                <div class="about-section">
+                    <div class="section-header">
+                        <h3>🏛️ End-to-End System Architecture Pipeline</h3>
+                        <p class="section-sub">A streamlined pipeline transforming raw industrial models into GPU-accelerated optimal operating points.</p>
+                    </div>
+
+                    <div class="arch-pipeline-grid">
+                        <!-- Stage 1 -->
+                        <div class="arch-stage-card">
+                            <div class="arch-stage-badge">STAGE 01</div>
+                            <div class="arch-stage-title">📥 Model Ingestion &amp; Parsing</div>
+                            <ul class="arch-stage-list">
+                                <li>Industry-standard Netlib MPS parser (Fixed &amp; Free format).</li>
+                                <li>Real-world 8-Crude Indian Refinery assay generator.</li>
+                                <li>Markowitz portfolio risk matrices &amp; power commitment schedules.</li>
+                                <li>Zero-copy conversion into SciPy Compressed Sparse Row (CSR).</li>
+                            </ul>
+                        </div>
+
+                        <!-- Stage 2 -->
+                        <div class="arch-stage-card">
+                            <div class="arch-stage-badge">STAGE 02</div>
+                            <div class="arch-stage-title">⚖️ Ruiz Preconditioning</div>
+                            <ul class="arch-stage-list">
+                                <li>Iterative diagonal scaling: computes diagonal matrices D &amp; E such that norm of rows &amp; columns ≈ 1.</li>
+                                <li>Equi-scales matrix: A_scaled = D * A * E, c_scaled = E * c, b_scaled = D * b.</li>
+                                <li>Reduces condition number κ(A) from ~10⁷ down to ~10², accelerating convergence by 10x-50x.</li>
+                                <li>Preserves exact duality and reconstructs unscaled primal-dual solutions.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Stage 3 -->
+                        <div class="arch-stage-card highlight">
+                            <div class="arch-stage-badge">STAGE 03</div>
+                            <div class="arch-stage-title">⚡ CUDA Parallel SpMV Engine</div>
+                            <ul class="arch-stage-list">
+                                <li>Asynchronous CUDA kernel dispatch via CuPy array handles.</li>
+                                <li>A and A^T stored permanently in GPU VRAM as sparse CSR/CSC structures.</li>
+                                <li>Inner PDHG loop executes entirely on GPU; 0 CPU-GPU memory copies during iterations.</li>
+                                <li>Utilizes 4,608 Ada Lovelace cores with 504 GB/s memory bandwidth.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Stage 4 -->
+                        <div class="arch-stage-card">
+                            <div class="arch-stage-badge">STAGE 04</div>
+                            <div class="arch-stage-title">🔬 Tri-Class Solver Engines</div>
+                            <ul class="arch-stage-list">
+                                <li><strong>LP:</strong> Chambolle-Pock First-Order Primal-Dual with adaptive step-sizes (τ, σ) satisfying τ·σ·‖A‖² &lt; 1.</li>
+                                <li><strong>QP:</strong> Proximal PDHG with Huber-regularized quadratic objectives for variance risk minimization.</li>
+                                <li><strong>MILP:</strong> GPU-accelerated Branch-and-Bound with warm-started LP relaxations and pseudo-cost branching.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Stage 5 -->
+                        <div class="arch-stage-card">
+                            <div class="arch-stage-badge">STAGE 05</div>
+                            <div class="arch-stage-title">📊 KKT Convergence &amp; Economics</div>
+                            <ul class="arch-stage-list">
+                                <li>Monitors Primal Residual ‖Ax - b‖_∞, Dual Residual ‖A^T y + c‖_∞, and Relative Duality Gap.</li>
+                                <li>Computes exact economic shadow prices: λ_i = ∂(Margin) / ∂(Cap_i) [$/bbl, $/RON-bbl].</li>
+                                <li>Extracts physical plant bottlenecks and stream valuations for refinery operators.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mathematical Rigor & Derivation -->
+                <div class="about-section">
+                    <div class="section-header">
+                        <h3>📐 Mathematical Foundations &amp; Algorithm Derivations</h3>
+                        <p class="section-sub">Rigorous first-order saddle-point theory engineered for massive data parallelism.</p>
+                    </div>
+
+                    <div class="math-grid">
+                        <div class="math-card">
+                            <div class="math-card-title">1. Saddle-Point Minimax Formulation</div>
+                            <div class="math-desc">Every constrained linear program is recast into an unconstrained saddle-point minimax problem:</div>
+                            <code class="math-code">
+                                min_{x ∈ [l, u]} max_{y ≥ 0} &nbsp; L(x, y) = cᵀx + yᵀ(Ax − b)<br>
+                                Subject to: x_j ∈ [l_j, u_j], &nbsp; y_i ≥ 0 for inequalities
+                            </code>
+                            <div class="math-desc">
+                                Saddle-point (x*, y*) satisfies the Karush-Kuhn-Tucker (KKT) optimality conditions: primal feasibility, dual feasibility, and complementary slackness y*(Ax* - b) = 0.
+                            </div>
+                        </div>
+
+                        <div class="math-card">
+                            <div class="math-card-title">2. Chambolle-Pock Proximal Updates</div>
+                            <div class="math-desc">Alternating gradient ascent on dual variable y and descent on primal variable x with over-relaxation:</div>
+                            <code class="math-code">
+                                y^{k+1} = proj_{Y}( y^k + σ ( A x̄^k − b ) )<br>
+                                x^{k+1} = proj_{[l,u]}( x^k − τ ( c + Aᵀ y^{k+1} ) )<br>
+                                x̄^{k+1} = x^{k+1} + θ ( x^{k+1} − x^k ), &nbsp; θ = 1.0
+                            </code>
+                            <div class="math-desc">
+                                Note that dual update uses over-relaxed primal point x̄^k. Projection onto simple box constraints [l, u] is O(N) elementwise clipping, perfectly parallelized on CUDA.
+                            </div>
+                        </div>
+
+                        <div class="math-card">
+                            <div class="math-card-title">3. Ruiz Diagonal Equi-Scaling</div>
+                            <div class="math-desc">Condition number κ(A) determines the spectral radius and convergence speed. Ruiz equilibration computes:</div>
+                            <code class="math-code">
+                                d_i = 1 / sqrt( ‖A_{i,:}‖_∞ ), &nbsp; e_j = 1 / sqrt( ‖A_{:,j}‖_∞ )<br>
+                                D = diag(d), &nbsp; E = diag(e)<br>
+                                A ← D · A · E, &nbsp; b ← D · b, &nbsp; c ← E · c
+                            </code>
+                            <div class="math-desc">
+                                After 10-15 iterations, every row and column of A has infinity norm within [1-ε, 1+ε]. Upon convergence, solutions are recovered via x = E · x_scaled and y = D · y_scaled.
+                            </div>
+                        </div>
+
+                        <div class="math-card">
+                            <div class="math-card-title">4. Economic Shadow Price &amp; Debottlenecking</div>
+                            <div class="math-desc">Dual multipliers y*_i correspond directly to the marginal economic sensitivity:</div>
+                            <code class="math-code">
+                                λ_i = ∂(Operating Margin) / ∂(b_i)<br>
+                                If unit capacity b_i increases by 1 barrel/day:<br>
+                                ΔProfit = λ_i · Δb_i &nbsp; ($/bbl or $/RON-bbl)
+                            </code>
+                            <div class="math-desc">
+                                Constraints with λ_i &gt; 0 indicate binding physical bottlenecks. Zero shadow prices indicate slack equipment with underutilized capacity.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Domain Twin: Indian Oil & Gas -->
+                <div class="about-section">
+                    <div class="section-header">
+                        <h3>🛢️ Indian Petroleum Refining &amp; BS-VI Mandate Digital Twin</h3>
+                        <p class="section-sub">Modeled after Indian Oil Corporation Ltd (IOCL) Mathura &amp; MRPL Mangalore topologies.</p>
+                    </div>
+
+                    <div class="about-grid">
+                        <div class="about-card">
+                            <div class="about-card-icon">🇮🇳</div>
+                            <h3>8 Global Crude Basket</h3>
+                            <p>Refinery model ingests real crude assays: Domestic Bombay High (38.5° API, 0.14% S) alongside imported Arab Light, Arab Heavy, Urals, Maya, Bonny Light, Basrah, and Murban.</p>
+                        </div>
+                        <div class="about-card">
+                            <div class="about-card-icon">⚗️</div>
+                            <h3>4-Stage Refining Units</h3>
+                            <p>Rigorous mass balance across Crude Distillation (CDU 160k bpd), Vacuum Distillation (VDU 75k bpd), Fluid Catalytic Cracker (FCCU 40k bpd), Diesel Hydrotreater (DHT 55k bpd), and Continuous Catalytic Reformer (CRU 30k bpd).</p>
+                        </div>
+                        <div class="about-card">
+                            <div class="about-card-icon">🌿</div>
+                            <h3>BS-VI Clean Fuel Standard</h3>
+                            <p>Strict non-linear quality pooling linearized for LP: Petrol Research Octane Number (RON ≥ 91.0), Diesel Sulfur content (&le; 10.0 ppm S), and Jet Fuel smoke point specs.</p>
+                        </div>
+                        <div class="about-card">
+                            <div class="about-card-icon">💡</div>
+                            <h3>Marginal Debottlenecking</h3>
+                            <p>Dual valuation informs refinery schedulers exactly which plant unit expansion yields the highest return on capital investment (e.g., DHT Hydrotreater yielding +$27.19/bbl on capacity expansion).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hardware VRAM Architecture & Scaling -->
+                <div class="about-section">
+                    <div class="section-header">
+                        <h3>🖥️ Hardware VRAM Architecture &amp; Massive Problem Scaling</h3>
+                        <p class="section-sub">Sparse matrix representations shatter the memory wall of traditional CPU interior point solvers.</p>
+                    </div>
+
+                    <div class="math-grid">
+                        <div class="math-card">
+                            <div class="math-card-title">Traditional Dense Solvers (Cholesky Bottleneck)</div>
+                            <div class="math-desc">Dense simplex or interior-point solvers require storing and factorizing dense matrices:</div>
+                            <code class="math-code">
+                                Memory = M × N × 8 bytes (Float64)<br>
+                                100,000 variables × 50,000 constraints = 40.0 GB RAM<br>
+                                Result: Out of Memory (OOM) on standard workstation GPUs.
+                            </code>
+                        </div>
+
+                        <div class="math-card">
+                            <div class="math-card-title">Our Sparse CSR CUDA Architecture</div>
+                            <div class="math-desc">Industrial LP matrices are typically &gt; 99.5% sparse. Storing only non-zero entries (NNZ):</div>
+                            <code class="math-code">
+                                Memory = (2 × NNZ + M) × 8 bytes<br>
+                                Same 100,000 × 50,000 problem (0.1% density = 5M NNZ):<br>
+                                5,000,000 × 16 bytes ≈ 80 MB VRAM (500x memory saving!)<br>
+                                Maximum capacity on 8GB RTX 4070: 364 Million Non-Zeros.
+                            </code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key References & Academic Citations -->
+                <div class="about-section">
+                    <div class="section-header">
+                        <h3>📚 Academic Citations &amp; Foundational Literature</h3>
+                        <p class="section-sub">Grounded in cutting-edge convex optimization theory published in premier mathematical journals.</p>
+                    </div>
+                    <div class="table-container" style="margin-top: 1rem;">
+                        <table class="compliance-table">
+                            <thead>
+                                <tr>
+                                    <th>Citation</th>
+                                    <th>Authors &amp; Year</th>
+                                    <th>Algorithmic Contribution</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Chambolle-Pock PDHG</strong></td>
+                                    <td>Antonin Chambolle &amp; Thomas Pock (2011)</td>
+                                    <td>First-order primal-dual algorithm for convex saddle-point problems with optimal O(1/k) convergence rate.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>PDLP (Google Research)</strong></td>
+                                    <td>David Applegate, Mateo Díaz, Haihao Lu, Miles Lubin (2021)</td>
+                                    <td>Practical first-order methods for large-scale linear programming: adaptive restarts, Ruiz scaling, and primal weight tuning.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>cuPDLP / GPU First-Order</strong></td>
+                                    <td>Haihao Lu &amp; Jinwen Yang (2023)</td>
+                                    <td>Demonstrated GPU PDHG outperforming legacy simplex solvers by 10x-100x on massive linear programs with millions of constraints.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Ruiz Matrix Equilibration</strong></td>
+                                    <td>Daniel Ruiz (2001)</td>
+                                    <td>Symmetric diagonal scaling method for reducing matrix condition numbers in sparse numerical linear algebra.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Technology Stack -->
+                <div class="about-section">
+                    <div class="section-header">
+                        <h3>🛠️ Technology Stack &amp; Sovereign Infrastructure</h3>
+                        <p class="section-sub">Pure indigenous software stack designed for deployment on Indian defense, PSU, and cloud computing nodes.</p>
+                    </div>
+                    <div class="tech-badges-grid" style="margin-top: 1rem;">
+                        <div class="tech-badge-card"><span class="dot"></span>NVIDIA CUDA 13.2</div>
+                        <div class="tech-badge-card"><span class="dot"></span>CuPy GPU Sparse SpMV</div>
+                        <div class="tech-badge-card"><span class="dot"></span>Python 3.10+ (NumPy / SciPy)</div>
+                        <div class="tech-badge-card"><span class="dot"></span>Asynchronous Flask 3.0 API</div>
+                        <div class="tech-badge-card"><span class="dot"></span>Chart.js Real-Time Telemetry</div>
+                        <div class="tech-badge-card"><span class="dot"></span>Dark Industrial SCADA UI</div>
+                        <div class="tech-badge-card"><span class="dot"></span>Netlib Standard MPS Parser</div>
+                        <div class="tech-badge-card"><span class="dot"></span>Zero External Solver C-Libraries</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>PDHG-GPU Solver — Smart India Hackathon 2026 — SIH26119</p>
+    </footer>
+
+    <script src="/static/js/app.js?v=2.7"></script>
+</body>
+</html>
