@@ -549,7 +549,7 @@ def download_sample_iocl():
 if __name__ == "__main__":
     print("=" * 60)
     print("  PDHG-GPU: Indigenous LP Solver for Refinery Optimization")
-    print("  SIH Problem Statement: SIH26119")
+    print("  High-Performance Industrial Mathematical Optimization Engine")
     print("=" * 60)
     print("\n  Open http://localhost:5000 in your browser\n")
     app.run(debug=True, host="0.0.0.0", port=5000)

@@ -1,11 +1,11 @@
 # 🗣️ Non-Technical Questions Guide: Easy to Hard (Simple Words & Everyday Analogies)
-**SIH 2026 Problem Statement: SIH26119 (Ministry of Petroleum & Natural Gas)**  
-*Project: PDHG-GPU — Indigenous High-Performance Optimization Solver for Indian Refineries*
+**Executive & Industrial Evaluation Reference**  
+*Project: PDHG-GPU — High-Performance Mathematical Optimization Solver for Industrial Refineries*
 
 ---
 
 ## 🎯 How to Use This Guide
-In your SIH presentation, judges aren't just looking at math formulas or code. Many judges are **senior ministry officials, PSU plant general managers, or business evaluators**. They will deliberately ask questions in plain English to see if you **actually understand how a refinery works and why this matters to the country**, or if you just memorized code.
+In technical reviews and evaluations, audiences aren't just looking at math formulas or code. Evaluators, engineers, and plant managers will ask questions in plain English to see if you **actually understand how a refinery works and the practical value of GPU acceleration**, or if you just memorized algorithms.
 
 This guide orders questions from **Level 1 (Easy & Basic)** to **Level 2 (Medium & Practical)** to **Level 3 (Hard & Skeptical)**.
 

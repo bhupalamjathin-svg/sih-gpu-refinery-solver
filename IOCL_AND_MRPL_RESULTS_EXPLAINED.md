@@ -1,6 +1,6 @@
 # 🏭 IOCL Mathura & MRPL Mega-Complex: What Every Number & Graph Means (Simple Words)
-**SIH 2026 Problem Statement: SIH26119 (Ministry of Petroleum & Natural Gas)**  
-*Project: PDHG-GPU Indigenous Refinery Optimization Solver*
+**Industrial Refinery Digital Twin & Optimization Guide**  
+*Project: PDHG-GPU High-Performance Process Optimization Engine*
 
 ---
 

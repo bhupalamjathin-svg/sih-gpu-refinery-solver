@@ -20,7 +20,7 @@ if sys.platform == "win32":
 # (e.g. cuda_fp8.hpp / cuda_fp6.hpp deprecation macro errors on Windows)
 try:
     import cupy.cuda.compiler as _comp
-    if not hasattr(_comp, "_sih_sanitized"):
+    if not hasattr(_comp, "_cuda_sanitized"):
         _orig_compile = _comp._compile_using_nvrtc_no_warning
 
         def _sanitized_nvrtc_compile(source, options=(), *args, **kwargs):
@@ -31,7 +31,7 @@ try:
             return _orig_compile(source, cleaned_opts, *args, **kwargs)
 
         _comp._compile_using_nvrtc_no_warning = _sanitized_nvrtc_compile
-        _comp._sih_sanitized = True
+        _comp._cuda_sanitized = True
 except Exception:
     pass
 

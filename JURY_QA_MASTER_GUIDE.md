@@ -1,6 +1,6 @@
-# 🎯 SIH 2026 Jury Q&A Master Guide: Technical & Non-Technical Questions
-**Problem Statement SIH26119 (Ministry of Petroleum & Natural Gas - MoPNG)**  
-*Project: PDHG-GPU — Indigenous GPU-Accelerated Optimization Solver for Industrial Refinery Planning*
+# 🎯 Technical & Strategic Q&A Master Guide: Viva, Defense & Industrial Evaluation
+**High-Performance Industrial Mathematical Optimization Engine**  
+*Project: PDHG-GPU — GPU-Accelerated Optimization Solver for Industrial Process Systems*
 
 ---
 

@@ -1,6 +1,6 @@
 # 🖥️ The Prototype Explained: What Actually Happens When You Click "Run"?
-**SIH 2026 Problem Statement: SIH26119 (Ministry of Petroleum & Natural Gas)**  
-*Project: PDHG-GPU Indigenous Refinery Optimization Solver*
+**Industrial Process Systems & Digital Twin Guide**  
+*Project: PDHG-GPU High-Performance Process Optimization Engine*
 
 ---
 

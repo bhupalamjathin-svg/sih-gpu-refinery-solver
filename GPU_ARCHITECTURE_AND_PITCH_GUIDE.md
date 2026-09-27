@@ -1,6 +1,6 @@
-# 🚀 PDHG-GPU: Comprehensive Technical Guide & 8-Minute Stage Pitch Script
-**SIH 2026 Problem Statement: SIH26119 (Ministry of Petroleum & Natural Gas)**  
-*Indigenous GPU-Accelerated Mathematical Optimization Engine for Industrial Refinery Planning*
+# 🚀 PDHG-GPU: Comprehensive Technical Architecture & Presentation Guide
+**High-Performance Industrial Mathematical Optimization Engine**  
+*GPU-Accelerated Mathematical Optimization Engine for Industrial Process Systems*
 
 ---
 

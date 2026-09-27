@@ -1,6 +1,6 @@
 # 📐 PDHG-GPU: Complete Mathematical Equations, Formulas & Algorithms Guide
-**Problem Statement SIH26119 (Ministry of Petroleum & Natural Gas)**  
-*Project: Indigenous GPU-Accelerated Mathematical Optimization Solver for Large-Scale Refinery Planning*
+**High-Performance Industrial Mathematical Optimization Engine**  
+*Project: GPU-Accelerated Mathematical Optimization Solver for Large-Scale Process Systems*
 
 ---
 
